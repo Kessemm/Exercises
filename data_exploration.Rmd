@@ -5,32 +5,34 @@ output: html_notebook
 ```{r}
 #Installation:
 install.packages("tidyverse")
-```
+install.packages("gapminder")
+#Necessary libraries:
+library(tidyverse)
+library(gapminder)
+
+``````
 
 
 ```{r}
-#Necessary libraries:
-library(tidyverse)
-
-```
 
 
+ 
 ```{r}
 #let's analyize the iris dataset:
 head(iris) #show the first ten entries of the iris dataset
 
-plot(iris$Sepal.Length,iris$Sepal.Width, xlab = "Sepal Length (cm)", ylab = "Sepal Width (cm)")
+plot(iris$Petal.Length,iris$Petal.Width, xlab = "Petal Length (cm)", ylab = "Petal Width (cm)")
 
 #using ggplot:
-ggplot(data = iris, aes(x = Sepal.Length, y = Sepal.Width,color = Species)) +
+ggplot(data = iris, aes(x = Petal.Length, y = Petal.Width,color = Species)) +
  geom_point(aes(shape = Species)) + #changes the shape for each species
   scale_color_manual(values = c("purple",
                                 "black",
-                                "orange")) +             
+                                "orange"))              
   # geom_line() + #connects the dots
-  geom_smooth() + #can add se=FALSE to remove the confidance margin
+  # geom_smooth() + #can add se=FALSE to remove the confidance margin
   # facet_wrap(~ Species)
-facet_grid(rows = vars(Species))
+# facet_grid(rows = vars(Species))
   
 #otheroptions - geom_boxplot, geom_col (coumn chart)
 
@@ -78,6 +80,65 @@ ggplot(diamonds, aes(cut, price)) +
 
 ```
 
+```{r}
+head(gapminder_unfiltered)
+
+#summarizing the data:
+summary(gapminder_unfiltered)
+
+gapminder_unfiltered %>% distinct(country) %>% nrow
+
+#creating a linear model:
+ggplot(gapminder_unfiltered, aes(gdpPercap, lifeExp)) +
+  geom_point() + 
+  geom_smooth(method = "lm") #specifying "lm" creates a linear smoothing 
+#calculating the actual numbers:
+lm(lifeExp ~ gdpPercap, data = gapminder_unfiltered) #lm(Y ~ X, data) - Y as afunction of X.
+
+lm(lifeExp ~ log(gdpPercap) + continent + year, data = gapminder_unfiltered) 
+formula = lifeExp ~ log(gdpPercap) + continent + year
+
+#adding an interaction variable:
+summary(lm(lifeExp ~ log(gdpPercap) + continent + year + (log(gdpPercap)):continent, data = gapminder_unfiltered))
+
+#PREDICTION:
+
+#create a variable with the model:
+gapMod <- lm(lifeExp ~ log(gdpPercap) + continent + year + (log(gdpPercap)):continent, data = gapminder_unfiltered)
+
+#duplicate the dataset so thatI can make changes:
+gapPred <- gapminder_unfiltered
+
+#adding another column with the prediction for each variable in the dataset:
+gapPred <- gapPred %>%
+  mutate(predict = predict(gapMod, newdata = gapPred))
+
+#plot the residuals of the model:
+gapPred %>%
+  mutate(resid = predict-lifeExp) %>% #add a residuals column
+  ggplot(aes(predict, resid)) + 
+  geom_point() + 
+  annotate("segment", x = -Inf, xend = Inf, y = 0, yend = 0, color = "red") #add a line to represent 0d
+```
+```{r}
+#CLASSIFICATION:
+
+head(mtcars)
+
+#plot classification data:
+ggplot(mtcars, aes(mpg, am)) + 
+  geom_point()
+
+#create a model with logistic regression:
+logmod <- glm(am ~ mpg, data = mtcars, family = binomial)
+
+#create a summary:
+summary(logmod)
+
+#predict classification data:
+predict(mtmod, mtcars, type = "response")
+
+```
 
 Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
 
